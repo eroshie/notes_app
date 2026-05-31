@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
@@ -6,32 +6,25 @@ from bson.objectid import ObjectId
 import smtplib
 import random
 import bcrypt
-from email.mime.text import MIMEText
-from flask import send_from_directory
 import os
+from email.mime.text import MIMEText
+
 app = Flask(__name__)
 
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://alvinero:alvinero@msmes.ybbzkya.mongodb.net/?appName=MSMEs")
+EMAIL = os.environ.get("EMAIL", "sheshablearaya@gmail.com")
+PASSWORD = os.environ.get("EMAIL_PASSWORD", "fqik fjsk cdao kdkc")
+JWT_SECRET = os.environ.get("JWT_SECRET_KEY", "4533f4cc0403ae481bc5c0c529735d163593bcbaee373b6869d70d9529ebe7b1")
 
-MONGO_URI = os.environ.get("MONGO_URI")
-EMAIL = os.environ.get("EMAIL")
-PASSWORD = os.environ.get("EMAIL_PASSWORD")
-
-client = MongoClient(MONGO_URI)
-app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
-
-uri = "mongodb+srv://alvinero:alvinero@msmes.ybbzkya.mongodb.net/?appName=MSMEs"
-client = MongoClient(uri, server_api=ServerApi('1'))
+client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client["MSMEs"]
 users_collection = db["users"]
 notes_collection = db["notes"]
 
-EMAIL = "sheshablearaya@gmail.com"
-PASSWORD = "fqik fjsk cdao kdkc"
+app.config["JWT_SECRET_KEY"] = JWT_SECRET
+jwt = JWTManager(app)
 
 otp_storage = {}
-
-app.config["JWT_SECRET_KEY"] = "4533f4cc0403ae481bc5c0c529735d163593bcbaee373b6869d70d9529ebe7b1" 
-jwt = JWTManager(app)
 
 def send_otp(email, otp):
     msg = MIMEText(f"Your OTP is: {otp}")
@@ -46,7 +39,6 @@ def serialize(note):
     note["_id"] = str(note["_id"])
     return note
 
-
 @app.route("/")
 def home():
     return send_from_directory("templates", "index.html")
@@ -56,7 +48,6 @@ def register():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
     if users_collection.find_one({"email": email}):
@@ -85,7 +76,6 @@ def login():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
     user = users_collection.find_one({"email": email})
@@ -93,26 +83,14 @@ def login():
         return jsonify({"error": "Invalid email or password"}), 400
     if not bcrypt.checkpw(password.encode("utf-8"), user["password"]):
         return jsonify({"error": "Invalid email or password"}), 400
-    
     token = create_access_token(identity=email)
     return jsonify({"message": "Login successful", "token": token}), 200
-
-
-# @app.route("/show_user", methods=["GET"])
-# def show_user():
-#     data = request.get_json()
-#     email = data.get("email")
-#     user = users_collection.find_one({"email": email})
-#     if not user:
-#         return jsonify({"error": "User not found"}), 404
-#     return jsonify({"email": user["email"]}), 200
 
 @app.route("/notes", methods=["GET"])
 @jwt_required()
 def get_notes():
     notes = list(notes_collection.find())
     return jsonify([serialize(note) for note in notes]), 200
-
 
 @app.route("/notes/<note_id>", methods=["GET"])
 @jwt_required()
@@ -121,7 +99,6 @@ def get_note(note_id):
     if not note:
         return jsonify({"error": "Note not found"}), 404
     return jsonify(serialize(note)), 200
-
 
 @app.route("/notes", methods=["POST"])
 @jwt_required()
@@ -132,7 +109,6 @@ def add_note():
     result = notes_collection.insert_one({"title": data["title"], "content": data["content"]})
     return jsonify({"message": "Note created", "id": str(result.inserted_id)}), 201
 
-
 @app.route("/notes/<note_id>", methods=["PUT"])
 @jwt_required()
 def update_note(note_id):
@@ -142,7 +118,6 @@ def update_note(note_id):
         {"$set": {"title": data["title"], "content": data["content"]}}
     )
     return jsonify({"message": "Note updated"}), 200
-
 
 @app.route("/notes/<note_id>", methods=["DELETE"])
 @jwt_required()
