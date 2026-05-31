@@ -8,8 +8,16 @@ import random
 import bcrypt
 from email.mime.text import MIMEText
 from flask import send_from_directory
+import os
 app = Flask(__name__)
 
+
+MONGO_URI = os.environ.get("MONGO_URI")
+EMAIL = os.environ.get("EMAIL")
+PASSWORD = os.environ.get("EMAIL_PASSWORD")
+
+client = MongoClient(MONGO_URI)
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 
 uri = "mongodb+srv://alvinero:alvinero@msmes.ybbzkya.mongodb.net/?appName=MSMEs"
 client = MongoClient(uri, server_api=ServerApi('1'))
