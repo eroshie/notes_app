@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NoteApp</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f0;
+  --bg-primary:#ffffff;
+  --bg-secondary:#f0f0eb;
+  --text:#1a1a1a;
+  --text-secondary:#666;
+  --text-tertiary:#999;
+  --border:rgba(0,0,0,0.1);
+  --border-hover:rgba(0,0,0,0.2);
+  --accent:#534AB7;
+  --accent-hover:#3C3489;
+  --accent-light:#EEEDFE;
+  --danger:#c0392b;
+  --danger-light:#FCEBEB;
+  --success:#0F6E56;
+  --success-light:#E1F5EE;
+  --radius:10px;
+  --radius-lg:14px;
+}
+[data-theme="dark"]{
+  --bg:#111110;
+  --bg-primary:#1c1c1a;
+  --bg-secondary:#242422;
+  --text:#f0f0eb;
+  --text-secondary:#999;
+  --text-tertiary:#666;
+  --border:rgba(255,255,255,0.08);
+  --border-hover:rgba(255,255,255,0.15);
+  --accent-light:#26215C;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s}
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+input,textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-secondary);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border 0.2s,box-shadow 0.2s}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(83,74,183,0.12)}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+.btn{padding:10px 20px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-primary);color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;transition:all 0.15s;font-weight:500}
+.btn:hover{background:var(--bg-secondary);border-color:var(--border-hover)}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-danger{background:transparent;color:var(--danger);border-color:rgba(192,57,43,0.3)}
+.btn-danger:hover{background:var(--danger-light)}
+.btn-sm{padding:6px 12px;font-size:13px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:var(--bg-primary);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.logo{font-size:18px;font-weight:700;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:8px;letter-spacing:-0.3px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.toggle-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;cursor:pointer;color:var(--text-secondary);font-size:15px;transition:all 0.2s}
+.toggle-btn:hover{background:var(--bg-secondary);border-color:var(--border-hover)}
+.card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+label{font-size:13px;color:var(--text-secondary);font-weight:500}
+.link{color:var(--accent);cursor:pointer;text-decoration:underline}
+.error-msg{color:var(--danger);font-size:13px;margin-top:4px;padding:8px 12px;background:var(--danger-light);border-radius:var(--radius);border:1px solid rgba(192,57,43,0.2)}
+.success-msg{color:var(--success);font-size:13px;margin-top:4px;padding:8px 12px;background:var(--success-light);border-radius:var(--radius);border:1px solid rgba(15,110,86,0.2)}
+.note-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;flex-direction:column;gap:8px;transition:border-color 0.2s,transform 0.2s}
+.note-card:hover{border-color:var(--border-hover);transform:translateY(-1px)}
+.note-title{font-size:15px;font-weight:600}
+.note-content{font-size:14px;color:var(--text-secondary);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.note-actions{display:flex;gap:8px;margin-top:4px}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-primary);border-radius:var(--radius-lg);border:1px solid var(--border);padding:2rem;width:100%;max-width:440px}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.modal-title{font-size:17px;font-weight:600}
+.close-btn{background:none;border:none;cursor:pointer;color:var(--text-tertiary);font-size:20px;padding:4px;border-radius:6px;transition:all 0.2s}
+.close-btn:hover{color:var(--text);background:var(--bg-secondary)}
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text-secondary);grid-column:1/-1}
+.empty-state i{font-size:48px;margin-bottom:1rem;display:block;color:var(--text-tertiary)}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:3rem;max-width:600px;width:100%}
+.feature-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center}
+.feature-icon{font-size:28px;color:var(--accent);margin-bottom:10px;display:block}
+.feature-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.feature-desc{font-size:13px;color:var(--text-secondary)}
+.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5rem 2rem 3rem;gap:1.5rem;flex:1}
+.hero-icon{font-size:64px;color:var(--accent);margin-bottom:0.5rem}
+.hero-title{font-size:38px;font-weight:700;max-width:480px;line-height:1.25;letter-spacing:-0.5px}
+.hero-sub{color:var(--text-secondary);font-size:16px;max-width:400px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:0.5rem}
+.note-date{font-size:12px;color:var(--text-tertiary)}
+.otp-hint{font-size:14px;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;padding:12px;background:var(--bg-secondary);border-radius:var(--radius)}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo" onclick="showPage('landing')">
+    <i class="ti ti-notes"></i> NoteApp
+  </span>
+  <div class="nav-right">
+    <button class="toggle-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">
+      <i class="ti ti-moon"></i>
+    </button>
+    <div id="navAuth" style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="showPage('login')">Log in</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('register')">Sign up</button>
+    </div>
+    <div id="navUser" style="display:none;align-items:center;gap:10px">
+      <span style="font-size:13px;color:var(--text-secondary)" id="navEmail"></span>
+      <button class="btn btn-sm" onclick="logout()">Log out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Landing -->
+<div id="page-landing" class="page active">
+  <div class="hero">
+    <div><i class="ti ti-notes hero-icon"></i></div>
+    <h1 class="hero-title">Your notes, organized and secure</h1>
+    <p class="hero-sub">Create, manage, and access your notes from anywhere. Simple, fast, and private.</p>
+    <div class="hero-btns">
+      <button class="btn btn-primary" onclick="showPage('register')">Get started for free</button>
+      <button class="btn" onclick="showPage('login')">Log in</button>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <i class="ti ti-lock feature-icon"></i>
+        <p class="feature-title">Secure</p>
+        <p class="feature-desc">Protected with JWT authentication</p>
+      </div>
+      <div class="feature-card">
+        <i class="ti ti-bolt feature-icon"></i>
+        <p class="feature-title">Fast</p>
+        <p class="feature-desc">Instant save and load</p>
+      </div>
+      <div class="feature-card">
+        <i class="ti ti-device-mobile feature-icon"></i>
+        <p class="feature-title">Anywhere</p>
+        <p class="feature-desc">Works on any device</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Login -->
+<div id="page-login" class="page" style="align-items:center;justify-content:center;padding:3rem 1rem">
+  <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:1.5rem">
+    <div>
+      <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.3px">Welcome back</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:4px">Log in to your account</p>
+    </div>
+    <div class="card">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@gmail.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()" />
+      </div>
+      <div id="loginMsg" style="margin-bottom:8px"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="handleLogin()" id="loginBtn">Log in</button>
+    </div>
+    <p style="text-align:center;font-size:14px;color:var(--text-secondary)">No account? <span class="link" onclick="showPage('register')">Sign up</span></p>
+  </div>
+</div>
+
+<!-- Register -->
+<div id="page-register" class="page" style="align-items:center;justify-content:center;padding:3rem 1rem">
+  <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:1.5rem">
+    <div>
+      <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.3px">Create account</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-top:4px">Sign up to get started</p>
+    </div>
+    <div class="card">
+      <div id="registerForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="you@gmail.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleRegister()" />
+        </div>
+        <div id="registerMsg" style="margin-bottom:8px"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="handleRegister()" id="registerBtn">Send OTP</button>
+      </div>
+      <div id="otpForm" style="display:none">
+        <p class="otp-hint"><i class="ti ti-mail"></i> We sent a 6-digit OTP to your email. Enter it below to verify your account.</p>
+        <div class="form-group">
+          <label>OTP code</label>
+          <input type="text" id="otpInput" placeholder="123456" maxlength="6" onkeydown="if(event.key==='Enter')handleVerifyOtp()" />
+        </div>
+        <div id="otpMsg" style="margin-bottom:8px"></div>
+        <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="handleVerifyOtp()">Verify OTP</button>
+        <button class="btn" style="width:100%" onclick="showRegisterForm()">Back</button>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:14px;color:var(--text-secondary)">Already have an account? <span class="link" onclick="showPage('login')">Log in</span></p>
+  </div>
+</div>
+
+<!-- Notes -->
+<div id="page-notes" class="page" style="padding:2rem;flex-direction:column;gap:1.5rem">
+  <div style="max-width:900px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:1.5rem;flex:1">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.3px">My notes</h2>
+        <p style="font-size:13px;color:var(--text-secondary);margin-top:2px" id="noteCount">0 notes</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()"><i class="ti ti-plus"></i> New note</button>
+    </div>
+    <div class="notes-grid" id="notesGrid">
+      <div class="empty-state">
+        <i class="ti ti-notes-off"></i>
+        <p>No notes yet. Create your first one!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">New note</span>
+      <button class="close-btn" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="noteTitle" placeholder="Note title" />
+    </div>
+    <div class="form-group">
+      <label>Content</label>
+      <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+    </div>
+    <div id="noteMsg" style="margin-bottom:8px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveNote()">Save note</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = 'http://127.0.0.1:5000';
+let token = null;
+let notes = [];
+let editingNoteId = null;
+let pendingEmail = '';
+let isDark = false;
+
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+}
+
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.setAttribute('data-theme', isDark ? 'dark' : '');
+  document.getElementById('themeBtn').innerHTML = isDark
+    ? '<i class="ti ti-sun"></i>'
+    : '<i class="ti ti-moon"></i>';
+}
+
+function setNavAuth(loggedIn, email) {
+  document.getElementById('navAuth').style.display = loggedIn ? 'none' : 'flex';
+  document.getElementById('navUser').style.display = loggedIn ? 'flex' : 'none';
+  if (email) document.getElementById('navEmail').textContent = email;
+}
+
+function logout() {
+  token = null; notes = [];
+  setNavAuth(false);
+  showPage('landing');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function handleRegister() {
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const msg = document.getElementById('registerMsg');
+  if (!email || !password) { msg.innerHTML = '<p class="error-msg">Please fill in all fields.</p>'; return; }
+  msg.innerHTML = '<p style="font-size:13px;color:var(--text-secondary)">Sending OTP...</p>';
+  document.getElementById('registerBtn').disabled = true;
+  try {
+    const res = await fetch(BASE + '/register', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data = await res.json();
+    if (res.ok) {
+      pendingEmail = email;
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('otpForm').style.display = 'block';
+    } else {
+      msg.innerHTML = `<p class="error-msg">${escHtml(data.error)}</p>`;
+    }
+  } catch {
+    msg.innerHTML = '<p class="error-msg">Could not connect to server. Make sure Flask is running.</p>';
+  }
+  document.getElementById('registerBtn').disabled = false;
+}
+
+async function handleVerifyOtp() {
+  const otp = document.getElementById('otpInput').value.trim();
+  const msg = document.getElementById('otpMsg');
+  if (!otp) { msg.innerHTML = '<p class="error-msg">Enter the OTP from your email.</p>'; return; }
+  msg.innerHTML = '<p style="font-size:13px;color:var(--text-secondary)">Verifying...</p>';
+  try {
+    const res = await fetch(BASE + '/verify-otp', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:pendingEmail,otp})});
+    const data = await res.json();
+    if (res.ok) {
+      msg.innerHTML = '<p class="success-msg">Account created successfully! Redirecting to login...</p>';
+      setTimeout(() => { showRegisterForm(); showPage('login'); }, 1500);
+    } else {
+      msg.innerHTML = `<p class="error-msg">${escHtml(data.error)}</p>`;
+    }
+  } catch {
+    msg.innerHTML = '<p class="error-msg">Could not connect to server.</p>';
+  }
+}
+
+function showRegisterForm() {
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('otpForm').style.display = 'none';
+  document.getElementById('registerMsg').innerHTML = '';
+  document.getElementById('otpMsg').innerHTML = '';
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const msg = document.getElementById('loginMsg');
+  if (!email || !password) { msg.innerHTML = '<p class="error-msg">Please fill in all fields.</p>'; return; }
+  msg.innerHTML = '<p style="font-size:13px;color:var(--text-secondary)">Logging in...</p>';
+  document.getElementById('loginBtn').disabled = true;
+  try {
+    const res = await fetch(BASE + '/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data = await res.json();
+    if (res.ok) {
+      token = data.token;
+      setNavAuth(true, email);
+      await loadNotes();
+      showPage('notes');
+      msg.innerHTML = '';
+    } else {
+      msg.innerHTML = `<p class="error-msg">${escHtml(data.error)}</p>`;
+    }
+  } catch {
+    msg.innerHTML = '<p class="error-msg">Could not connect to server. Make sure Flask is running.</p>';
+  }
+  document.getElementById('loginBtn').disabled = false;
+}
+
+async function loadNotes() {
+  try {
+    const res = await fetch(BASE + '/notes', {headers:{'Authorization':'Bearer ' + token}});
+    notes = await res.json();
+  } catch { notes = []; }
+  renderNotes();
+}
+
+function renderNotes() {
+  const grid = document.getElementById('notesGrid');
+  const count = notes.length;
+  document.getElementById('noteCount').textContent = count + ' note' + (count !== 1 ? 's' : '');
+  if (!count) {
+    grid.innerHTML = '<div class="empty-state"><i class="ti ti-notes-off"></i><p>No notes yet. Create your first one!</p></div>';
+    return;
+  }
+  grid.innerHTML = notes.map(n => `
+    <div class="note-card">
+      <p class="note-title">${escHtml(n.title)}</p>
+      <p class="note-content">${escHtml(n.content)}</p>
+      <div class="note-actions">
+        <button class="btn btn-sm" onclick="openEditModal('${n._id}')"><i class="ti ti-edit"></i> Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteNote('${n._id}')"><i class="ti ti-trash"></i> Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddModal() {
+  editingNoteId = null;
+  document.getElementById('modalTitle').textContent = 'New note';
+  document.getElementById('noteTitle').value = '';
+  document.getElementById('noteContent').value = '';
+  document.getElementById('noteMsg').innerHTML = '';
+  document.getElementById('noteModal').classList.add('open');
+  setTimeout(() => document.getElementById('noteTitle').focus(), 100);
+}
+
+function openEditModal(id) {
+  const note = notes.find(n => n._id === id);
+  if (!note) return;
+  editingNoteId = id;
+  document.getElementById('modalTitle').textContent = 'Edit note';
+  document.getElementById('noteTitle').value = note.title;
+  document.getElementById('noteContent').value = note.content;
+  document.getElementById('noteMsg').innerHTML = '';
+  document.getElementById('noteModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('noteModal').classList.remove('open');
+}
+
+async function saveNote() {
+  const title = document.getElementById('noteTitle').value.trim();
+  const content = document.getElementById('noteContent').value.trim();
+  const msg = document.getElementById('noteMsg');
+  if (!title || !content) { msg.innerHTML = '<p class="error-msg">Title and content are required.</p>'; return; }
+  const url = editingNoteId ? BASE + '/notes/' + editingNoteId : BASE + '/notes';
+  const method = editingNoteId ? 'PUT' : 'POST';
+  try {
+    const res = await fetch(url, {method,headers:{'Content-Type':'application/json','Authorization':'Bearer ' + token},body:JSON.stringify({title,content})});
+    if (res.ok) { closeModal(); await loadNotes(); }
+    else { const d = await res.json(); msg.innerHTML = `<p class="error-msg">${escHtml(d.error)}</p>`; }
+  } catch {
+    msg.innerHTML = '<p class="error-msg">Could not connect to server.</p>';
+  }
+}
+
+async function deleteNote(id) {
+  if (!confirm('Delete this note?')) return;
+  try {
+    await fetch(BASE + '/notes/' + id, {method:'DELETE',headers:{'Authorization':'Bearer ' + token}});
+    await loadNotes();
+  } catch {}
+}
+
+document.getElementById('noteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
