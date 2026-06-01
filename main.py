@@ -44,6 +44,10 @@ def home():
     template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
     return send_from_directory(template_dir, "index.html")
 
+@app.route("/test")
+def test():
+    return jsonify({"message": "Server is running!"}), 200
+
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
