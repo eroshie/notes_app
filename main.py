@@ -20,10 +20,10 @@ CORS(app)
 
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://alvinero:alvinero@msmes.ybbzkya.mongodb.net/?appName=MSMEs")
-EMAIL = os.environ.get("EMAIL", "sheshablearaya@gmail.com")
-PASSWORD = os.environ.get("EMAIL_PASSWORD", "fqik fjsk cdao kdkc")
-JWT_SECRET = os.environ.get("JWT_SECRET_KEY", "4533f4cc0403ae481bc5c0c529735d163593bcbaee373b6869d70d9529ebe7b1")
+MONGO_URI = os.environ.get("MONGO_URI")
+EMAIL = os.environ.get("EMAIL")
+PASSWORD = os.environ.get("EMAIL_PASSWORD")
+JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 
 client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client["MSMEs"]
