@@ -41,12 +41,12 @@ def serialize(note):
 
 @app.route("/")
 def home():
-    template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
-    return send_from_directory(template_dir, "index.html")
+    with open(os.path.join(os.path.dirname(__file__), "templates", "index.html"), "r") as f:
+        return f.read()
 
 @app.route("/test")
 def test():
-    return jsonify({"message": "Server is running!"}), 200
+    return "hello world", 200
 
 @app.route("/register", methods=["POST"])
 def register():
