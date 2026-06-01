@@ -41,7 +41,8 @@ def serialize(note):
 
 @app.route("/")
 def home():
-    return send_from_directory("templates", "index.html")
+    template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+    return send_from_directory(template_dir, "index.html")
 
 @app.route("/register", methods=["POST"])
 def register():
